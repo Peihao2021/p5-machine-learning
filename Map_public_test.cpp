@@ -26,7 +26,7 @@ TEST(map_public_test) {
 
   // Here's the way to insert a pair with {} initialization syntax
   words.insert({"pi", 3.14159});
-  ASSERT_ALMOST_EQUAL(words["pi"], 3.14159, 0.00001);
+  ASSERT_ALMOST_EQUAL(words["pi"], 3.14159, 0.00001);/////unpassed
 
   vector<string> expected_keys = { "hello", "pi", "world" };
   vector<double> expected_values = { 1, 3.14159, 2 };

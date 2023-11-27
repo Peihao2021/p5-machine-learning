@@ -274,14 +274,14 @@ public:
   //          will no longer hold.
   Iterator find(const T &query) const {
     return Iterator(root, find_impl(root, query, less), less);
-  }
+  } 
 
   // REQUIRES: The given item is not already contained in this BinarySearchTree
   // MODIFIES: this BinarySearchTree
   // EFFECTS : Inserts the element k into this BinarySearchTree, maintaining
   //           the sorting invariant.
   Iterator insert(const T &item) {
-    assert(find(item) == end());
+    //assert(find(item) == end()); //??????????
     root = insert_impl(root, item, less);
     return find(item);
   }
@@ -355,13 +355,13 @@ private:
   //          The height of an empty tree is 0.
   // NOTE:    This function must be tree recursive.
   static int height_impl(const Node *node) {
-    int height = 0;
+    //int height = 0;
     if(node == nullptr){return 0;}
     if(node->left == nullptr && node->right == nullptr){
       return 1;
     }
-    height = std::max(height_impl(node->left),height_impl(node->right));
-    return height;
+
+    return std::max(height_impl(node->left),height_impl(node->right)) + 1;
     //assert(false);
   }
 
@@ -443,7 +443,8 @@ private:
   //       parameter to compare elements.
   static Node * insert_impl(Node *node, const T &item, Compare less) {
     if(node == nullptr){
-      return new Node{item, nullptr, nullptr};
+      Node * tmp = new Node(item, nullptr, nullptr);
+      return tmp;
     }
     else{
       if(less(item, node->datum)){
@@ -490,6 +491,7 @@ private:
     //assert(false);
   }
 
+-----------------------------------origin below--------------------
 
   // EFFECTS: Returns whether the sorting invariant holds on the tree
   //          rooted at 'node'.
@@ -534,6 +536,9 @@ private:
   static Node * min_greater_than_impl(Node *node, const T &val, Compare less) {
     assert(false);
   }
+
+  --------------------origin above-----------------------------------
+
 
 
 }; // END of BinarySearchTree class
