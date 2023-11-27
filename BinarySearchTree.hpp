@@ -360,7 +360,7 @@ private:
     if(node->left == nullptr && node->right == nullptr){
       return 1;
     }
-    height = max(height_impl(node->left),height_impl(node->right));
+    height = std::max(height_impl(node->left),height_impl(node->right));
     return height;
     //assert(false);
   }
@@ -404,7 +404,10 @@ private:
   //       Two elements A and B are equivalent if and only if A is
   //       not less than B and B is not less than A.
   static Node * find_impl(Node *node, const T &query, Compare less) {
-    Node * ptr = nullptr;
+    
+    if(node == nullptr){
+      return nullptr;
+    }
 
     if(!less(node->datum, query) && !less(node->datum, query)){
       return node;
@@ -415,7 +418,7 @@ private:
       //if the value is less than what we want, 
       //we have to search the right tree
     }else{
-      return return find_impl(node->left, query, less);
+      return find_impl(node->left, query, less);
       //if the value is more than what we want, 
       //we have to search the less tree
     }
