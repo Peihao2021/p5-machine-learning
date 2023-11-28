@@ -231,7 +231,7 @@ public:
   // EFFECTS : Returns an iterator to the first element
   //           in this BinarySearchTree.
   Iterator begin() const {
-    if (root == nullptr) {
+    if (empty_impl(root)) {
       return Iterator();
     }
     return Iterator(root, min_element_impl(root), less);
@@ -338,7 +338,7 @@ private:
   //          tree is 0.
   // NOTE:    This function must be tree recursive.
   static int size_impl(const Node *node) {
-    if (!node) {
+    if (empty_impl(node)) {
       return 0;
     }
     //return the size of the left subtree + right subtree + itself
@@ -350,14 +350,11 @@ private:
   //          The height of an empty tree is 0.
   // NOTE:    This function must be tree recursive.
   static int height_impl(const Node *node) {
-    if (!node) {
+    if (empty_impl(node)) {
       return 0;
     }
-    else if(node->left == nullptr && node->right == nullptr){
-      return 1;
-    }
     // return the max between the left subtree + itself and the right subtree + itself
-    return std::max(height_impl(node->left) + 1, height_impl(node->right) + 1);
+    return 1 + std::max(height_impl(node->left), height_impl(node->right));
   }
 
   // EFFECTS: Creates and returns a pointer to the root of a new node structure
@@ -365,7 +362,7 @@ private:
   //          tree rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static Node *copy_nodes_impl(Node *node) {
-    if (!node) {
+    if (empty_impl(node)) {
       return nullptr;
     }
     // copies the left subtree, right subtree, then root node
@@ -384,6 +381,7 @@ private:
     destroy_nodes_impl(node->left);
     destroy_nodes_impl(node->right);
     delete node;
+
   }
 
   // EFFECTS : Searches the tree rooted at 'node' for an element equivalent
@@ -400,7 +398,7 @@ private:
   //       not less than B and B is not less than A.
   static Node * find_impl(Node *node, const T &query, Compare less) {
     // empty tree or reached end of path
-    if (!node) {
+    if (empty_impl(node)) {
       return nullptr;
     }
     // if datum is not less than query and query is not less than datum, datum and query are equal
@@ -434,15 +432,15 @@ private:
   //       parameter to compare elements.
   static Node * insert_impl(Node *node, const T &item, Compare less) {
     // insert to empty tree
-    if (!node) {
-      Node *newNode = new Node{item, nullptr, nullptr}
+    if (empty_impl(node)) {
+      Node *newNode = new Node{item, nullptr, nullptr};
       return newNode;
     }
     else if (less(item, node->datum)) {
-      node->left = insert(node->left, item, less);
+      node->left = insert_impl(node->left, item, less);
     }
     else {
-      node->right = insert(node->right, item, less);
+      node->right = insert_impl(node->right, item, less);
     }
     return node;
   }
@@ -456,10 +454,10 @@ private:
   //       structure, and where the smallest element lives.
   static Node * min_element_impl(Node *node) {
     // return nullptr if empty tree
-    if (!node) {
+    if (empty_impl(node)) {
       return nullptr;
     }
-    else if (node->left == nullptr) {
+    else if (empty_impl(node->left)) {
       return node;
     }
     return min_element_impl(node->left);
@@ -471,10 +469,10 @@ private:
   // HINT: You don't need to compare any elements! Think about the
   //       structure, and where the largest element lives.
   static Node * max_element_impl(Node *node) {
-    if (!node) {
+    if (empty_impl(node)) {
       return nullptr;
     }
-    else if (node->right == nullptr) {
+    else if (empty_impl(node->right)) {
       return node;
     }
     return max_element_impl(node->right);
@@ -485,21 +483,21 @@ private:
   //          rooted at 'node'.
   // NOTE:    This function must be tree recursive.
   static bool check_sorting_invariant_impl(const Node *node, Compare less) {
-    if (!node) { // check empty tree
+    if (empty_impl(node)) { // check empty tree
       return true;
     }
-    else if (!(node->left) && !(node->right)) { // one element in tree
+    else if (empty_impl(node->left) && empty_impl(node->right)) { // one element in tree
       return true;
     }
     if ((node->left)) { // check sorting invariant of left subtree
       // check if left is less than node and call sorting invariant on left node
-      if (!less(node->left->datum, node->datum) || !check_sorting_invariant(node->left, less)) { 
+      if (!less(node->left->datum, node->datum) || !check_sorting_invariant_impl(node->left, less)) { 
          return false; // if fails sorting invariant, return false
       }
     }
     if ((node->right)) { // check sorting invariant of right subtree
       // check if right is greater than node and call sorting invariant on right node
-      if (!less(node->datum, node->right->datum) || !check_sorting_invariant(node->right, less)) { 
+      if (!less(node->datum, node->right->datum) || !check_sorting_invariant_impl(node->right, less)) { 
         return false; // if fails sorting invariant, return false
       }
     }
@@ -514,7 +512,7 @@ private:
   //       See https://en.wikipedia.org/wiki/Tree_traversal#In-order
   //       for the definition of a in-order traversal.
   static void traverse_inorder_impl(const Node *node, std::ostream &os) {
-    if (!node) {
+    if (empty_impl(node)) {
       return;
     }
     traverse_inorder_impl(node->left, os);
@@ -530,7 +528,7 @@ private:
   //       See https://en.wikipedia.org/wiki/Tree_traversal#Pre-order
   //       for the definition of a pre-order traversal.
   static void traverse_preorder_impl(const Node *node, std::ostream &os) {
-    if (!node) {
+    if (empty_impl(node)) {
       return;
     }
     os << node->datum << " ";
@@ -550,18 +548,19 @@ private:
   //       'less' parameter). Based on the result, you gain some information
   //       about where the element you're looking for could be.
   static Node * min_greater_than_impl(Node *node, const T &val, Compare less) {
-    if (!node) {
+    if (empty_impl(node)) {
       return nullptr;
     }
-    else if (!node->left && !node->right) {
-      return node;
+    else if (less(val, node->datum)) { // node greater than val
+      Node *leftNode = min_greater_than_impl(node->left, val, less);
+      if (empty_impl(leftNode)) {
+        return node;
+      }
+      else {
+        return leftNode;
+      }
     }
-    else if (node->right && less(node->datum, val)) { // val greater than node
-      return min_greater_than_impl(node->right, val, less);
-    }
-    else if (node->left && less(val, node->datum)) { // node greater than val
-      return min_greater_than_impl(node->left, val, less);
-    }
+    return min_greater_than_impl(node->right, val, less); // val greater than node
   }
 
 
