@@ -401,7 +401,9 @@ private:
     if (empty_impl(node)) {
       return nullptr;
     }
-    // if datum is not less than query and query is not less than datum, datum and query are equal
+    // if datum is not less than query 
+    // query is not less than datum
+    // datum and query are equal
     else if (!less(node->datum, query) && !less(query, node->datum)) {
       return node;
     }
@@ -491,13 +493,15 @@ private:
     }
     if ((node->left)) { // check sorting invariant of left subtree
       // check if left is less than node and call sorting invariant on left node
-      if (!less(node->left->datum, node->datum) || !check_sorting_invariant_impl(node->left, less)) { 
+      bool check1 = less(node->left->datum, node->datum);
+      if (!check1 || !check_sorting_invariant_impl(node->left, less)) { 
          return false; // if fails sorting invariant, return false
       }
     }
     if ((node->right)) { // check sorting invariant of right subtree
       // check if right is greater than node and call sorting invariant on right node
-      if (!less(node->datum, node->right->datum) || !check_sorting_invariant_impl(node->right, less)) { 
+      bool check1 = less(node->datum, node->right->datum)
+      if (!check1 || !check_sorting_invariant_impl(node->right, less)) { 
         return false; // if fails sorting invariant, return false
       }
     }
