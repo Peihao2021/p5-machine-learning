@@ -18,7 +18,7 @@ class Classifier{
 public:
     Classifier(bool debugMode) : debug(debugMode), totalPosts(0) {}
 
-    void trainer(string training_file) {
+    void trainer(string &training_file) {
         // open csvin
         csvstream csvin(training_file);
 
@@ -39,10 +39,11 @@ public:
                 cout << ", content = " << row["content"] << endl;
             }
 
-            countUniqueWords(row["content"]);
-            countPostWithWord(row["content"]);
+            set<string> words = unique_words(row["content"]);
+            countUniqueWords(words);
+            countPostWithWord(words);
             countPostWithLabel(row["tag"]);
-            countPostWithLabelandWord(row["tag"], row["content"]);
+            countPostWithLabelandWord(row["tag"], words);
         }
 
         // extra blank line;
@@ -59,20 +60,15 @@ public:
         return words;
     }   
     
-    void countUniqueWords(const string &content) {
-        set<string> filtered_line = unique_words(content);
-        for (auto &words : filtered_line) {
+    void countUniqueWords(const set<string> &content) {
+        for (auto &words : content) {
             unique_word.insert(words);
         }
-        // for (auto it = unique_word.begin(); it != unique_word.end(); ++it) {
-        //     cout << *it << " " << endl;;
-        // }
     }
     
-    void countPostWithWord(const string &content){
-        set<string> filtered_line = unique_words(content);
+    void countPostWithWord(const set<string> &content){
         for (auto &word : unique_word) {
-            if (filtered_line.find(word) != filtered_line.end()) {
+            if (content.find(word) != content.end()) {
                 posts_words_num[word] += 1;
             }
         }
@@ -82,18 +78,17 @@ public:
         posts_label_num[tag] += 1;
     }
 
-    void countPostWithLabelandWord(const string &tag, const string &content) {
-        set<string> filtered_line = unique_words(content);
-        for (auto &word : filtered_line) {
+    void countPostWithLabelandWord(const string &tag, const set<string> &content){
+        for (auto &word : content) {
             post_label_and_words_num[{tag, word}] += 1;
         }
     }
-
+ 
     pair<string, double> probability(const string &total_content) const {
         set<string> content = unique_words(total_content);
         double max_prob = -INFINITY;
         string max_tag;
-        for (auto &it : posts_label_num){
+        for (auto &it : posts_label_num) {
             double prob = 0;
             string tag = it.first;
             prob += log(1.0 * posts_label_num.at(tag) / totalPosts);
@@ -139,10 +134,10 @@ public:
         }
         else if (mode == 2) {
             cout << "classes:" << endl;
-            for (auto &[word, integer]: posts_label_num) {
-                cout << "  " << word << ", ";
-                cout << integer << " examples, log-prior = ";
-                cout << log(1.0 * integer / totalPosts) << endl;
+            for (auto &word: posts_label_num) {
+                cout << "  " << word.first << ", ";
+                cout << word.second << " examples, log-prior = ";
+                cout << log(1.0 * word.second / totalPosts) << endl;
             }
         }
         else if (mode == 3) {
@@ -150,14 +145,18 @@ public:
             for (auto &[words, integer] : post_label_and_words_num) {
                 cout << "  " << words.first << ":" << words.second;
                 cout << ", count = " << integer << ", log-likelihood = ";
-                if (integer == 0 && unique_word.find(words.second) != unique_word.end()) {
-                    cout << log(1.0 * posts_words_num[words.second] / totalPosts) << endl;
+                if (integer == 0 
+                    && unique_word.find(words.second) != unique_word.end()) {
+                    cout << log(1.0 * posts_words_num[words.second] / totalPosts) 
+                    << endl;
                 }
-                else if (integer == 0 && unique_word.find(words.second) == unique_word.end()) {
+                else if (integer == 0 
+                        && unique_word.find(words.second) == unique_word.end()) { 
                     cout << log(1.0 / totalPosts) << endl;
                 }
                 else {
-                    cout << log(1.0 * integer / posts_label_num[words.first]) << endl;
+                    cout << log(1.0 * integer / posts_label_num[words.first]) 
+                         << endl;
                 }
             }
         }
@@ -173,14 +172,15 @@ public:
         int total_num = 0;
 
         while(csvin >> row) {
-            if (row["tag"] == probability(row["content"]).first) {
+            pair<string, double> result = probability(row["content"]);
+            if (row["tag"] == result.first) {
                 correct_num++;
             }
             total_num++;
             cout << "  correct = " << row["tag"] << ", predicted = " 
-                 << probability(row["content"]).first 
+                 << result.first 
                  << ", log-probability score = " 
-                 << probability(row["content"]).second << endl
+                 << result.second << endl
                  << "  content = " << row["content"] << endl << endl;
         }
         

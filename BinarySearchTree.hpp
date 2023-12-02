@@ -500,7 +500,7 @@ private:
     }
     if ((node->right)) { // check sorting invariant of right subtree
       // check if right is greater than node and call sorting invariant on right node
-      bool check1 = less(node->datum, node->right->datum)
+      bool check1 = less(node->datum, node->right->datum);
       if (!check1 || !check_sorting_invariant_impl(node->right, less)) { 
         return false; // if fails sorting invariant, return false
       }
