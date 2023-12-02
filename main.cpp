@@ -78,25 +78,25 @@ public:
         }
     }
 
-    void countPostWithLabel(const string &tag){
+    void countPostWithLabel(const string &tag) {
         posts_label_num[tag] += 1;
     }
 
-    void countPostWithLabelandWord(const string &tag, const string &content){
+    void countPostWithLabelandWord(const string &tag, const string &content) {
         set<string> filtered_line = unique_words(content);
         for (auto &word : filtered_line) {
             post_label_and_words_num[{tag, word}] += 1;
         }
     }
 
-    pair<string, double> probability(const string &content) {
-        set<string> content = unique_words(content);
+    pair<string, double> probability(const string &total_content) const {
+        set<string> content = unique_words(total_content);
         double max_prob = -INFINITY;
         string max_tag;
         for (auto &it : posts_label_num){
             double prob = 0;
             string tag = it.first;
-            prob += log(posts_label_num.at(tag) / totalPosts);
+            prob += log(1.0 * posts_label_num.at(tag) / totalPosts);
             
             for (auto &word : content) {
                 if (!posts_words_num.count(word)) {
@@ -124,7 +124,7 @@ public:
         
     }
 
-    void printTrainingPosts() {
+    void printTrainingPosts() const {
         cout << "trained on ";
         cout << totalPosts;
         cout << " examples" << endl;
@@ -163,7 +163,7 @@ public:
         }
     }
 
-    void runner(const string &test_file) {
+    void runner(const string &test_file) const {
         cout << "test data:" << endl;
 
         csvstream csvin(test_file);
@@ -177,11 +177,11 @@ public:
                 correct_num++;
             }
             total_num++;
-            cout << "\tcorrect = " << row["tag"] << ", predicted = " 
+            cout << "  correct = " << row["tag"] << ", predicted = " 
                  << probability(row["content"]).first 
                  << ", log-probability score = " 
                  << probability(row["content"]).second << endl
-                 << "\tcontent = " << row["content"] << endl << endl;
+                 << "  content = " << row["content"] << endl << endl;
         }
         
         cout << "performance: " << correct_num << " / " << total_num
