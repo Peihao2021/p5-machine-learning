@@ -78,46 +78,58 @@ public:
         posts_label_num[tag] += 1;
     }
 
-    void countPostWithLabelandWord(const string &tag, const set<string> &content){
+    void countPostWithLabelandWord(const string &tag, const set<string> &content){       
         for (auto &word : content) {
             post_label_and_words_num[{tag, word}] += 1;
         }
     }
- 
+
+
     pair<string, double> probability(const string &total_content) const {
-        set<string> content = unique_words(total_content);
-        double max_prob = -INFINITY;
-        string max_tag;
-        for (auto &it : posts_label_num) {
-            double prob = 0;
-            string tag = it.first;
-            prob += log(1.0 * posts_label_num.at(tag) / totalPosts);
-            
-            for (auto &word : content) {
-                if (!posts_words_num.count(word)) {
+    set<string> content = unique_words(total_content);
+    double max_prob = -INFINITY;
+    string max_tag;
+
+    for (auto &it : posts_label_num) {
+        double prob = 0;
+        string tag = it.first;
+        prob += log(1.0 * posts_label_num.at(tag) / totalPosts);
+        
+        for (auto &word : content) {
+            int case_num = 0;
+
+            if (!posts_words_num.count(word)) {
+                case_num = 1;
+            } else if (!post_label_and_words_num.count({tag, word})) {
+                case_num = 2;
+            } else {
+                case_num = 3;
+            }
+
+            switch(case_num) {
+                case 1:
                     prob += log(1.0 / totalPosts);
-                }
-                else if (!post_label_and_words_num.count({tag, word})) {
+                    break;
+                case 2:
                     prob += log(1.0 * posts_words_num.at(word) / totalPosts);
-                }
-                else {
-                    prob += 
-                    log(1.0 * post_label_and_words_num.at({tag, word}) 
+                    break;
+                case 3:
+                    prob += log(1.0 * post_label_and_words_num.at({tag, word}) 
                     / 
                     posts_label_num.at(tag));
-                }
+                    break;
             }
-            
-            if (prob > max_prob) {
-                max_prob = prob;
-                max_tag = tag;
-            }
-            
         }
-
-        return {max_tag, max_prob};
         
+        if (prob > max_prob) {
+            max_prob = prob;
+            max_tag = tag;
+        }
     }
+
+    return {max_tag, max_prob};
+}
+
 
     void printTrainingPosts() const {
         cout << "trained on ";
